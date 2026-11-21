@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -6,7 +7,12 @@ export default function Signup() {
   const { signup, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
@@ -23,6 +29,7 @@ export default function Signup() {
     }
 
     const result = await signup(form);
+
     if (result.success) {
       navigate("/");
     } else {
@@ -33,14 +40,16 @@ export default function Signup() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <div className="eyebrow">Get started</div>
-        <h1>Create your account</h1>
+
+        <h1>Create Account</h1>
+
         <p className="subtitle">
-          Save every <span className="hl">summary</span> to your own history, so you can revisit
-          it later.
+          Start saving your study summaries
         </p>
 
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && (
+          <div className="alert alert-error">{error}</div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="field">
@@ -49,7 +58,7 @@ export default function Signup() {
               id="name"
               name="name"
               type="text"
-              placeholder="Alice"
+              placeholder="Enter your name"
               value={form.name}
               onChange={handleChange}
               required
@@ -62,7 +71,7 @@ export default function Signup() {
               id="email"
               name="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="Enter your email"
               value={form.email}
               onChange={handleChange}
               required
@@ -75,7 +84,7 @@ export default function Signup() {
               id="password"
               name="password"
               type="password"
-              placeholder="At least 6 characters"
+              placeholder="Enter password"
               value={form.password}
               onChange={handleChange}
               required
@@ -83,14 +92,31 @@ export default function Signup() {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? <span className="spinner" /> : "Create account"}
+          <button
+            type="submit"
+            className="btn btn-primary btn-block"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="spinner" />
+                Creating account...
+              </>
+            ) : (
+              "Sign Up"
+            )}
           </button>
         </form>
 
-        <div className="auth-footer">
-          Already have an account? <Link to="/login">Log in</Link>
+        <div className="auth-divider">
+          <span>or</span>
         </div>
+
+        <div className="auth-footer">
+          Already have an account?{" "}
+          <Link to="/login">Login</Link>
+        </div>
+
       </div>
     </div>
   );
