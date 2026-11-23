@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import api from "../api/axios.js";
 
@@ -14,7 +15,7 @@ export default function Summarizer() {
     setError("");
 
     if (!text.trim()) {
-      setError("Paste some notes or a textbook paragraph first");
+      setError("Paste some notes first.");
       return;
     }
 
@@ -29,7 +30,10 @@ export default function Summarizer() {
       if (err.code === "ERR_NETWORK") {
         setError("Can't reach the server. Is the backend running?");
       } else {
-        setError(err.response?.data?.message || "Something went wrong. Please try again.");
+        setError(
+          err.response?.data?.message ||
+          "Something went wrong. Please try again."
+        );
       }
     } finally {
       setLoading(false);
@@ -38,37 +42,48 @@ export default function Summarizer() {
 
   return (
     <div className="page-container">
-      <div className="eyebrow">New summary</div>
-      <h1>
-        Turn your notes into a <span className="hl">clear summary</span>
-      </h1>
-      <p className="subtitle">
-        Paste your class notes or a textbook paragraph below. Every summary you generate is saved
-        to your account automatically.
-      </p>
+      <div className="card summarizer-card">
 
-      <div className="card">
-        {error && <div className="alert alert-error">{error}</div>}
+        <div className="summarizer-heading">
+          <h1>Turn your notes into a clear summary</h1>
+          <p className="subtitle">
+            Paste your study material below and click summarise.
+          </p>
+        </div>
+
+        {error && (
+          <div className="alert alert-error">{error}</div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="field">
             <label htmlFor="notes">Your notes</label>
+
             <textarea
               id="notes"
-              placeholder="Paste your notes or textbook paragraph here..."
+              placeholder="Enter your notes here..."
               value={text}
-              onChange={(e) => setText(e.target.value.slice(0, MAX_LENGTH))}
+              onChange={(e) =>
+                setText(e.target.value.slice(0, MAX_LENGTH))
+              }
               disabled={loading}
+              maxLength={MAX_LENGTH}
             />
+
             <div className="char-count">
-              {text.length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
+              {text.length.toLocaleString()} / 20,000
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary" disabled={loading || !text.trim()}>
+          <button
+            type="submit"
+            className="btn btn-primary btn-block"
+            disabled={loading || !text.trim()}
+          >
             {loading ? (
               <>
-                <span className="spinner" /> Summarising...
+                <span className="spinner" />
+                Summarising...
               </>
             ) : (
               "Summarise"
@@ -76,12 +91,14 @@ export default function Summarizer() {
           </button>
         </form>
 
-        {result && (
-          <div className="summary-result">
-            <div className="eyebrow">Summary</div>
-            <div className="summary-result-text">{result.summary}</div>
+        <div className="summary-result">
+          <h2>Summary</h2>
+
+          <div className="summary-result-text">
+            {result?.summary || ""}
           </div>
-        )}
+        </div>
+
       </div>
     </div>
   );
