@@ -1,6 +1,6 @@
 
 
-import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
 import Summary from "../models/Summary.js";
 
 const MAX_INPUT_LENGTH = 20000;
@@ -8,13 +8,9 @@ const MAX_INPUT_LENGTH = 20000;
 // @route POST /api/summarise
 export const createSummary = async (req, res) => {
   try {
-    // Initialize Gemini when a request arrives
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-    });
-
     const { text } = req.body;
 
+    // Validate input
     if (!text || !text.trim()) {
       return res.status(400).json({
         message: "Paste some notes or text to summarise first",
@@ -27,29 +23,41 @@ export const createSummary = async (req, res) => {
       });
     }
 
+    // Check API key
     if (
-      !process.env.GEMINI_API_KEY ||
-      process.env.GEMINI_API_KEY.startsWith("your_")
+      !process.env.GROQ_API_KEY ||
+      process.env.GROQ_API_KEY.startsWith("your_")
     ) {
       return res.status(500).json({
-        message: "GEMINI_API_KEY is not configured. Add it to backend/.env",
+        message: "GROQ_API_KEY is not configured. Add it to backend/.env",
       });
     }
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `You are a study assistant. Summarise the student's notes or textbook paragraph into a clear, concise summary that captures key concepts, definitions, and important facts. Use short paragraphs or bullet points where helpful. Do not add information that isn't in the original text.
-
-Here are the notes:
-
-${text}`,
-      config: {
-        temperature: 0.4,
-        maxOutputTokens: 500,
-      },
+    // Initialize Groq
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
     });
 
-    const summaryText = response.text?.trim();
+    // Generate summary using Groq
+    const completion = await groq.chat.completions.create({
+      model: "openai/gpt-oss-20b",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a helpful study assistant. Summarise students' notes into clear, concise summaries. Capture key concepts, definitions, and important facts. Use headings and bullet points where helpful. Do not add information that isn't in the original text.",
+        },
+        {
+          role: "user",
+          content: `Summarise these study notes:\n\n${text}`,
+        },
+      ],
+      temperature: 0.4,
+      max_tokens: 500,
+    });
+
+    const summaryText =
+      completion.choices[0]?.message?.content?.trim();
 
     if (!summaryText) {
       return res.status(502).json({
@@ -57,6 +65,7 @@ ${text}`,
       });
     }
 
+    // Save summary in MongoDB
     const savedSummary = await Summary.create({
       userId: req.user._id,
       originalText: text,
@@ -66,17 +75,17 @@ ${text}`,
     return res.status(201).json(savedSummary);
 
   } catch (err) {
-    console.error("Gemini summarise error:", err);
+    console.error("Groq summarise error:", err);
 
     if (err.status === 401 || err.status === 403) {
       return res.status(500).json({
-        message: "Gemini rejected the API key. Check GEMINI_API_KEY in backend/.env",
+        message: "Groq rejected the API key. Check GROQ_API_KEY in backend/.env",
       });
     }
 
     if (err.status === 429) {
       return res.status(429).json({
-        message: "Gemini rate limit or quota exceeded. Please try again shortly.",
+        message: "Groq rate limit or quota exceeded. Please try again shortly.",
       });
     }
 

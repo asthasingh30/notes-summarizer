@@ -682,3 +682,31 @@ textarea:focus-visible {
     font-size: 15px;
   }
 }
+
+/* Signup and Login divider */
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 27px;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1.5px;
+  background: var(--rule-line);
+}
+
+.auth-divider span {
+  padding: 0 2px;
+}
+
+.auth-card .btn-primary {
+  min-height: 58px;
+  font-size: 18px;
+}
